@@ -2,42 +2,20 @@ package main
 
 import (
 	trippb "coolcar/proto/gen/go"
-	"fmt"
+	trip "coolcar/tripservice"
+	"log"
+	"net"
 
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 func main() {
-	trip := trippb.Trip{
-		Start: "abc",
-		End: "def",
-		DurationSec: 3600,
-		FeeCent: 10000,
-		StartPos: &trippb.Location{
-			Latitude: 30,
-			Longitude: 120,
-		},
-		EndPos: &trippb.Location{
-			Latitude: 35,
-			Longitude: 115,
-		},
-		PathLocations: []*trippb.Location{
-			{
-				Latitude: 31,
-			Longitude: 119,
-			},
-			{
-				Latitude: 32,
-				Longitude: 118,
-			},
-		},
-	}
-	
-	fmt.Println(&trip)
-	b, err := proto.Marshal(&trip)
+	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
-		panic(err)
+		log.Printf("failed to listen:%v", err)
 	}
-	fmt.Printf("%X\n", b)
 
+	s := grpc.NewServer()
+	trippb.RegisterTripServiceServer(s, &trip.Service{})
+	log.Fatal(s.Serve(lis))
 }
